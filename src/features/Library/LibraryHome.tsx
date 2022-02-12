@@ -3,10 +3,11 @@ import { Layout, Menu, Breadcrumb, Button, Tooltip } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
 
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectStatus, setSelectedLibrary } from '../GlobalSlice';
-import { getAllLibs, LibraryType, selectLibrary } from './LibrarySlice';
+import { selectStatus } from '../GlobalSlice';
+import { getAllLibs, selectLibrary } from './LibrarySlice';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { TVShowLibrary } from './TVShowLibrary';
+import { TVShowPage } from './TVShowPage';
 
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
@@ -38,7 +39,7 @@ export function LibraryHome() {
                 {
                   Object.values(tvShowLibs).map((lib) => {
                     return <Menu.Item key={lib.name}
-                      onClick={() => navigate(`/tv/${lib.name}`)}>
+                      onClick={() => navigate(`/lib/${lib.name}`)}>
                       {lib.name}
                     </Menu.Item>
                   })
@@ -52,7 +53,8 @@ export function LibraryHome() {
           <Content style={{ padding: '0 24px', minHeight: 280 }}>
             <Routes>
               <Route path="/" element={<div>Please select a library</div>} />
-              <Route path="/tv/:name" element={<TVShowLibrary />} />
+              <Route path="/lib/:name" element={<TVShowLibrary />} />
+              <Route path="/tv/:lib_name/:storage/:show_name" element={<TVShowPage />} />
             </Routes>
           </Content>
         </Layout>

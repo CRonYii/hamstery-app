@@ -43,14 +43,7 @@ export const testAuth = createAsyncThunk(
 export const globalSlice = createSlice({
   name: 'global',
   initialState,
-  reducers: {
-    setSelectedLibrary: (state, action: PayloadAction<{
-      type: LibraryType,
-      tvLib: string
-    }>) => {
-      state.librarySelected = action.payload;
-    }
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(testAuth.pending, (state) => {
@@ -68,8 +61,6 @@ export const globalSlice = createSlice({
       });
   },
 });
-
-export const { setSelectedLibrary } = globalSlice.actions;
 
 export const selectStatus = (state: RootState) => state.global;
 

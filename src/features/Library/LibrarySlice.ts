@@ -7,7 +7,6 @@ export enum LibraryType {
   Movie
 };
 
-
 export type Library = {
   name: string,
   type: LibraryType,
