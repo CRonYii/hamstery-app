@@ -3,7 +3,7 @@ import { Breadcrumb, Col, Divider, Dropdown, Row } from 'antd';
 import React from 'react';
 import { Link, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectStatus } from '../GlobalSlice';
+import { selectStatus, setAddShowModal } from '../GlobalSlice';
 import { LibraryContextMenu } from './LibraryHome';
 import { selectTVShowsLibrary } from './LibrarySlice';
 import { TVShowCard } from './TVShowCard';
@@ -23,7 +23,7 @@ export function TVShowLibrary() {
     <div>
       <Breadcrumb>
         <Breadcrumb.Item>
-          <Dropdown overlay={LibraryContextMenu(name, appSecret, dispatch, null)} trigger={['click']}>
+          <Dropdown overlay={LibraryContextMenu(name, appSecret, dispatch, () => dispatch(setAddShowModal({ visible: true, library: lib })))} trigger={['click']}>
             <Link to={`/tvshows/${lib.name}`}>
               <HomeOutlined /> <span>{lib.name}</span>
             </Link>
