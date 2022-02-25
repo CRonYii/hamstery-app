@@ -25,7 +25,17 @@ export const hamsteryGetShow = async (appSecret: string, lib: string, show_id: s
     return data;
 };
 
+export const hamsteryAddLib = async (appSecret: string, lib: { name: string, storage: string[] }) => {
+    const { data } = await axios.post(`/api/v1/tvshows`, { ...lib }, { headers: { Authorization: appSecret } });
+    return data;
+};
+
 export const hamsteryDeleteLib = async (appSecret: string, lib: string) => {
     const { data } = await axios.delete(`/api/v1/tvshows/${lib}`, { headers: { Authorization: appSecret } });
+    return data;
+};
+
+export const hamsteryList = async (appSecret: string, directory = '') => {
+    const { data } = await axios.get(`/api/v1/media/list/${directory}`, { headers: { Authorization: appSecret } });
     return data;
 };

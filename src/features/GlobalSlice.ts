@@ -11,7 +11,8 @@ export interface GlobalState {
   addShowModal: {
     visible: boolean,
     library?: ITVShowsLibrary
-  }
+  },
+  addLibraryModal: boolean
 }
 
 const initialState: GlobalState = {
@@ -20,7 +21,8 @@ const initialState: GlobalState = {
   authorized: false,
   addShowModal: {
     visible: false,
-  }
+  },
+  addLibraryModal: false
 };
 
 const hamsteryTestAppSecret = async (appSecret: string) => {
@@ -52,6 +54,9 @@ export const globalSlice = createSlice({
       library?: ITVShowsLibrary
     }>) {
       state.addShowModal = action.payload;
+    },
+    setAddLibraryModal(state, action: PayloadAction<boolean>) {
+      state.addLibraryModal = action.payload;
     }
   },
   extraReducers: (builder) => {
@@ -74,7 +79,8 @@ export const globalSlice = createSlice({
 
 export const selectStatus = (state: RootState) => state.global;
 export const selectAddShowModal = (state: RootState) => state.global.addShowModal;
+export const selectAddLibraryodal = (state: RootState) => state.global.addLibraryModal;
 
-export const { setAddShowModal } = globalSlice.actions;
+export const { setAddShowModal, setAddLibraryModal } = globalSlice.actions;
 
 export default globalSlice.reducer;

@@ -1,16 +1,17 @@
-import { DeleteTwoTone, EditTwoTone, FolderAddTwoTone, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
-import { Button, Dropdown, Form, Input, Layout, Menu, message, Modal, Popconfirm, Select, Tooltip } from 'antd';
+import { DeleteTwoTone, EditTwoTone, FolderAddTwoTone, PlusOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Dropdown, Form, Input, Layout, Menu, message, Modal, Popconfirm, Radio, Select, Tooltip } from 'antd';
+import debounce from 'lodash/debounce';
 import React, { useEffect, useState } from 'react';
-import { Link, Outlet, Route, Routes } from 'react-router-dom';
+import { Link, Navigate, Outlet, Route, Routes, useNavigate, useNavigationType } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectAddShowModal, selectStatus, setAddShowModal } from '../GlobalSlice';
-import { hamsteryAddShowToLib, hamsteryDeleteLib, hamsteryGetShow, hamsteryRefreshLib } from '../HamsteryAPI';
+import { selectAddLibraryodal, selectAddShowModal, selectStatus, setAddLibraryModal, setAddShowModal } from '../GlobalSlice';
+import { hamsteryAddLib, hamsteryAddShowToLib, hamsteryDeleteLib, hamsteryRefreshLib } from '../HamsteryAPI';
 import { searchTVShowsAll } from '../TMDB';
 import { addShowToLib, getAllLibs, selectAllLibraries } from './LibrarySlice';
+import { PathSelector } from './PathSelector';
 import { TVSeasonPage } from './TVSeasonPage';
 import { TVShowLibrary } from './TVShowLibrary';
 import { TVShowPage } from './TVShowPage';
-import debounce from 'lodash/debounce';
 
 
 const { SubMenu } = Menu;
@@ -40,14 +41,16 @@ function HomeLayout() {
 
   const { tvShowLibs } = useAppSelector(selectAllLibraries);
   return <Layout>
+    <AddLibraryModal />
+    <AddShowModal />
     <Header className="header">
       <Tooltip title="Setting">
         <Button shape="circle" icon={<SettingOutlined />} />
       </Tooltip>
+      <Button icon={<PlusOutlined />} onClick={() => dispatch(setAddLibraryModal(true))} style={{ marginLeft: 12 }}>Add Library</Button>
     </Header>
     <Content style={{ padding: '0 50px' }}>
       <Layout className="site-layout-background" style={{ padding: '24px 0' }}>
-        <AddShowModal />
         <Sider className="site-layout-background" width={200}>
           <Menu
             defaultOpenKeys={['tvshows', 'moveis']}
@@ -78,7 +81,82 @@ interface SearchResult {
   name: string, id: number, first_air_date: string
 }
 
-export function AddShowModal() {
+function AddLibraryModal() {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const visible = useAppSelector(selectAddLibraryodal);
+  const { appSecret } = useAppSelector(selectStatus);
+  const [form] = Form.useForm();
+  const closeModal = () => dispatch(setAddLibraryModal(false));
+
+  return <Modal title="Add Library" visible={visible} onCancel={closeModal}
+    footer={[
+      <Button key='submit' form="addLib" type="primary" htmlType="submit">Submit</Button>,
+    ]}>
+    <Form
+      form={form}
+      id="addLib"
+      name="addLib"
+      labelCol={{ span: 4 }}
+      initialValues={{ type: 'tvshows' }}
+      onFinish={async (data) => {
+        const hide = message.loading('Adding library...', 0);
+        await hamsteryAddLib(appSecret, data);
+        hide();
+        dispatch(getAllLibs(appSecret));
+        navigate(`/tvshows/${data.name}`);
+        form.resetFields();
+        closeModal();
+      }}
+      autoComplete="off"
+    >
+      <Form.Item
+        label="Type"
+        name="type"
+      >
+        <Radio.Group
+          options={[{ label: 'TV Shows', value: 'tvshows' }, { label: 'Movies', value: 'movies', disabled: true }]}
+          optionType="button"
+          buttonStyle="solid" />
+      </Form.Item>
+      <Form.Item
+        label="Name"
+        name="name"
+        rules={[{ required: true, message: 'Please input library name!' }]}
+      >
+        <Input />
+      </Form.Item>
+      <Form.List
+        name="storage"
+      >
+        {(fields, { add, remove }) => {
+          return <div>
+            {fields.map((field, index) => {
+              return <div key={field.key}>
+                <Form.Item label="Storage" style={{ marginBottom: 0 }}>
+                    <Form.Item
+                      name={[index]}
+                      style={{ display: 'inline-block' }}
+                      rules={[{ required: true, message: 'Storage cannot be empty!' }]}
+                    >
+                      <PathSelector  />
+                    </Form.Item>
+                    <Button
+                      danger
+                      icon={<DeleteTwoTone twoToneColor="#eb2f96" />}
+                      onClick={() => remove(field.name)} />
+                </Form.Item>
+              </div>
+            })}
+            <Button type="dashed" onClick={() => add()}><PlusOutlined /> Add Storage</Button>
+          </div>
+        }}
+      </Form.List>
+    </Form>
+  </Modal>
+}
+
+function AddShowModal() {
   const dispatch = useAppDispatch();
   const { visible, library } = useAppSelector(selectAddShowModal);
   const { appSecret } = useAppSelector(selectStatus);
@@ -88,7 +166,7 @@ export function AddShowModal() {
 
   const closeModal = () => dispatch(setAddShowModal({ visible: false, library: undefined }));
   const handleSearch = async (keyword: string) => {
-    if (keyword.trim() == '')
+    if (keyword.trim() === '')
       return setSearchResults([]);
     const data = await searchTVShowsAll(keyword, 'zh-CN'); /* TODO: Language Option */
     setSearchResults(data.map((show: SearchResult) => ({ name: show.name, id: show.id, first_air_date: show.first_air_date })));
@@ -99,8 +177,7 @@ export function AddShowModal() {
 
   return <Modal
     title="Add show"
-    style={{ top: 20 }}
-    width={'80vh'}
+    style={{ minWidth: '80vh' }}
     visible={visible}
     footer={[<Button key="submit" form="addshow" type="primary" htmlType="submit">Add</Button>]}
     onCancel={closeModal}
