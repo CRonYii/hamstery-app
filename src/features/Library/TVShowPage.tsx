@@ -1,6 +1,7 @@
-import { Card, Col, Divider, Row, Typography } from 'antd';
+import { Breadcrumb, Card, Col, Divider, Row } from 'antd';
+import { HomeOutlined } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { getTVShowDetails } from '../TMDB';
 import { selectTVShow } from './LibrarySlice';
@@ -35,7 +36,16 @@ export function TVShowPage() {
         return <div />;
     const tvShowPoster = show.poster;
     return <div>
-        <Typography.Title>{show_name}</Typography.Title>
+        <Breadcrumb>
+            <Breadcrumb.Item>
+                <Link to={`/tvshows/${lib_name}`}>
+                    <HomeOutlined /> <span>{lib_name}</span>
+                </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+                {show_name}
+            </Breadcrumb.Item>
+        </Breadcrumb>
         <Divider />
         <Row gutter={24} style={{ margin: 16 }} align='bottom'>
             {

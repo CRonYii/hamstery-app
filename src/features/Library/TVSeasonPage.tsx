@@ -1,7 +1,7 @@
-import { CheckCircleTwoTone, CloudDownloadOutlined, ImportOutlined } from '@ant-design/icons';
-import { Card, Col, Divider, Row, Typography } from 'antd';
+import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined } from '@ant-design/icons';
+import { Breadcrumb, Card, Col, Divider, Row } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { getTVShowSeason } from '../TMDB';
 import { selectTVShow, selectTVShowSeason } from './LibrarySlice';
@@ -37,7 +37,21 @@ export function TVSeasonPage() {
         return <div />
     const tvShowPoster = show.poster;
     return <div>
-        <Typography.Title>{show_name} {seasonName}</Typography.Title>
+        <Breadcrumb>
+            <Breadcrumb.Item>
+                <Link to={`/tvshows/${lib_name}`}>
+                    <HomeOutlined /> <span>{lib_name}</span>
+                </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+                <Link to={`/tvshows/${lib_name}/${show_name}`}>
+                    {show_name}
+                </Link>
+            </Breadcrumb.Item>
+            <Breadcrumb.Item>
+                    {seasonName}
+            </Breadcrumb.Item>
+        </Breadcrumb>
         <Divider />
         <Row gutter={24} style={{ margin: 16 }} align='bottom'>
             {
