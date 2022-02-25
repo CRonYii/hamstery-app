@@ -11,7 +11,7 @@ export function TVShowLibrary() {
   const lib = useAppSelector(selectTVShowsLibrary(name));
   if (!lib)
     return <div></div>
-  const showsView = lib.shows.map((show, i) => {
+  const showsView = [...lib.shows].sort((a, b) => a.name.localeCompare(b.name)).map((show, i) => {
     return <Col key={i}><TVShowCard key={show.metaSource.id} libName={name} show={show} /></Col>
   });
 
