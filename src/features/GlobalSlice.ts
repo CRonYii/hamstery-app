@@ -1,18 +1,26 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { RootState } from '../app/store';
+import { ITVShowsLibrary } from './Library/LibrarySlice';
 
 export interface GlobalState {
   appSecret: string,
-  authorized: boolean,
   loading: boolean,
+  authorized: boolean,
+  addShowModal: {
+    visible: boolean,
+    library?: ITVShowsLibrary
+  }
 }
 
 const initialState: GlobalState = {
   appSecret: '',
   loading: false,
   authorized: false,
+  addShowModal: {
+    visible: false,
+  }
 };
 
 const hamsteryTestAppSecret = async (appSecret: string) => {
@@ -38,7 +46,14 @@ export const testAuth = createAsyncThunk(
 export const globalSlice = createSlice({
   name: 'global',
   initialState,
-  reducers: {},
+  reducers: {
+    setAddShowModal(state, action: PayloadAction<{
+      visible: boolean,
+      library?: ITVShowsLibrary
+    }>) {
+      state.addShowModal = action.payload;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(testAuth.pending, (state) => {
@@ -58,5 +73,8 @@ export const globalSlice = createSlice({
 });
 
 export const selectStatus = (state: RootState) => state.global;
+export const selectAddShowModal = (state: RootState) => state.global.addShowModal;
+
+export const { setAddShowModal } = globalSlice.actions;
 
 export default globalSlice.reducer;

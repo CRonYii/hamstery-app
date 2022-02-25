@@ -1,13 +1,17 @@
 import { HomeOutlined } from '@ant-design/icons';
-import { Breadcrumb, Col, Divider, Row } from 'antd';
+import { Breadcrumb, Col, Divider, Dropdown, Row } from 'antd';
 import React from 'react';
 import { Link, useParams } from "react-router-dom";
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectStatus } from '../GlobalSlice';
+import { LibraryContextMenu } from './LibraryHome';
 import { selectTVShowsLibrary } from './LibrarySlice';
 import { TVShowCard } from './TVShowCard';
 
 export function TVShowLibrary() {
   const { name = '' } = useParams();
+  const { appSecret } = useAppSelector(selectStatus);
+  const dispatch = useAppDispatch();
   const lib = useAppSelector(selectTVShowsLibrary(name));
   if (!lib)
     return <div></div>
@@ -19,9 +23,11 @@ export function TVShowLibrary() {
     <div>
       <Breadcrumb>
         <Breadcrumb.Item>
-          <Link to={`/tvshows/${lib.name}`}>
-            <HomeOutlined /> <span>{lib.name}</span>
-          </Link>
+          <Dropdown overlay={LibraryContextMenu(name, appSecret, dispatch, null)} trigger={['click']}>
+            <Link to={`/tvshows/${lib.name}`}>
+              <HomeOutlined /> <span>{lib.name}</span>
+            </Link>
+          </Dropdown>
         </Breadcrumb.Item>
       </Breadcrumb>
       <Divider />
