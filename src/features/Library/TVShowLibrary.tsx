@@ -1,13 +1,18 @@
 import React, { useEffect } from 'react';
-import { Row, Col } from 'antd';
-import { useAppSelector } from '../../app/hooks';
+import { ReloadOutlined } from '@ant-design/icons';
+import { Row, Col, Typography, Divider, Button } from 'antd';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { useParams } from "react-router-dom";
-import { selectLibrary, Show } from './LibrarySlice';
+import { getAllLibs, selectLibrary, Show } from './LibrarySlice';
 import { TVShowCard } from './TVShowCard';
 import _ from 'lodash';
+import { selectStatus } from '../GlobalSlice';
+import { hamsteryrefreshLib } from '../HamsteryAPI';
 
 export function TVShowLibrary() {
   const { name: libName } = useParams();
+  const { appSecret, librarySelected } = useAppSelector(selectStatus);
+  const dispatch = useAppDispatch();
   const { tvShowLibs } = useAppSelector(selectLibrary);
 
   if (!libName || !tvShowLibs[libName])
@@ -20,8 +25,22 @@ export function TVShowLibrary() {
   });
 
   return (
-    <Row gutter={24} style={{ margin: 16 }} align='bottom'>
-      {showsView}
-    </Row>
+    <div>
+      <Typography.Title>{libName}</Typography.Title>
+      <Row gutter={24} align='middle'>
+        <Button icon={<ReloadOutlined />}
+          onClick={async () => {
+            console.log(appSecret);
+            
+            await hamsteryrefreshLib(appSecret, libName)
+            dispatch(getAllLibs(appSecret));
+
+          }}>Refresh</Button>
+      </Row>
+      <Divider />
+      <Row gutter={24} style={{ margin: 16 }} align='bottom'>
+        {showsView}
+      </Row>
+    </div>
   );
 }

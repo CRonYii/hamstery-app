@@ -8,6 +8,7 @@ import { getAllLibs, selectLibrary } from './LibrarySlice';
 import { Route, Routes, useNavigate } from 'react-router-dom';
 import { TVShowLibrary } from './TVShowLibrary';
 import { TVShowPage } from './TVShowPage';
+import { TVSeasonPage } from './TVSeasonPage';
 
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
@@ -55,6 +56,7 @@ export function LibraryHome() {
               <Route path="/" element={<div>Please select a library</div>} />
               <Route path="/lib/:name" element={<TVShowLibrary />} />
               <Route path="/tv/:lib_name/:storage/:show_name" element={<TVShowPage />} />
+              <Route path="/season/:lib_name/:storage/:show_name/:season_number" element={<TVSeasonPage />} />
             </Routes>
           </Content>
         </Layout>

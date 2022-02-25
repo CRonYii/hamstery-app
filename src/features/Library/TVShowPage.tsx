@@ -26,11 +26,10 @@ export function TVShowPage() {
             if (!lib_name || !storage || !show_name || !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name])
                 return;
             const data = await getTVShowDetails(show.metaSource.id, 'zh-CN');
-            console.log(data);
             setSeasons(data.seasons);
         }
         getDetails();
-    }, []);
+    }, [tvShowLibs]);
     if (!lib_name || !storage || !show_name || !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name]) {
         return <div />
     }
@@ -40,7 +39,6 @@ export function TVShowPage() {
         return <div>Unsupported</div>
     }
     return <div>
-
         <Typography.Title>{show_name}</Typography.Title>
         <Divider />
         <Row gutter={24} style={{margin: 16}} align='bottom'>
@@ -49,7 +47,7 @@ export function TVShowPage() {
                     return <Col key={s.season_number}>
                         <Card
                             hoverable
-                            // onClick={() => navigate(`/tv/${libName}/${encodeURIComponent(show.storage)}/${show.name}`)}
+                            onClick={() => navigate(`/season/${lib_name}/${encodeURIComponent(show.storage)}/${show.name}/${s.season_number}`)}
                             style={{ width: 300 }}
                             cover={< img alt="Poster" src={s.poster_path ? `https://image.tmdb.org/t/p/w500/${s.poster_path}` : tvShowPoster} />}
                         >

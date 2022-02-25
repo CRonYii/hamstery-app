@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
-import { hamsteryGetAllLibs } from '../HamsteryAPI'
+import { hamsteryGetAllLibs } from '../HamsteryAPI';
 
 export enum LibraryType {
   Show,
@@ -58,7 +58,7 @@ const initialState: TVShowLibraryState = {
 };
 
 export const getAllLibs = createAsyncThunk(
-  'global/getAllLibs',
+  'library/getAllLibs',
   async (appSecret: string) => {
     const data = await hamsteryGetAllLibs(appSecret);
     // The value we return becomes the `fulfilled` action payload
@@ -80,7 +80,7 @@ export const tvShowLibrarySlice = createSlice({
           .forEach((l: any) => {
             map[l.name] = l;
           });
-          state.tvShowLibs = map;
+        state.tvShowLibs = map;
       });
   }
 });
