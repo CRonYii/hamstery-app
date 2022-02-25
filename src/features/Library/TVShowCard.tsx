@@ -10,7 +10,7 @@ export function TVShowCard({ libName, show }: { libName: string, show: ITVShow }
     const navigate = useNavigate();
     return <Card
         hoverable
-        onClick={() => navigate(`/tv/${libName}/${show.name}`)}
+        onClick={() => navigate(`/tvshows/${libName}/${show.name}`)}
         style={{ width: 185 }}
         cover={< img alt="Poster" src={show.poster} />}
     >

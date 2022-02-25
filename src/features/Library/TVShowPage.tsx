@@ -43,7 +43,7 @@ export function TVShowPage() {
                     return <Col key={s.season_number}>
                         <Card
                             hoverable
-                            onClick={() => navigate(`/season/${lib_name}/${show.name}/${s.season_number}`)}
+                            onClick={() => navigate(`/tvshows/${lib_name}/${show.name}/${s.season_number}`)}
                             style={{ width: 300 }}
                             cover={< img alt="Poster" src={s.poster_path ? `https://image.tmdb.org/t/p/w500/${s.poster_path}` : tvShowPoster} />}
                         >
