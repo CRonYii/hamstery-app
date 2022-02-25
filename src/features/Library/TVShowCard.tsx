@@ -8,12 +8,15 @@ const { Meta } = Card;
 
 export function TVShowCard({ libName, show }: { libName: string, show: ITVShow }) {
     const navigate = useNavigate();
+    const description = show.seasons.length === 1 ?
+        `${show.seasons[0].episodes.length} episodes` :
+        `${show.seasons.length} seasons`
     return <Card
         hoverable
         onClick={() => navigate(`/tvshows/${libName}/${show.name}`)}
         style={{ width: 185 }}
         cover={< img alt="Poster" src={show.poster} />}
     >
-        <Meta title={show.name} description={`${Object.values(show.seasons).length} seasons in total`} />
+        <Meta title={show.name} description={description} />
     </Card >;
 }
