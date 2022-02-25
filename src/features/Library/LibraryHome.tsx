@@ -1,26 +1,26 @@
-import React, { useEffect } from 'react';
-import { Layout, Menu, Breadcrumb, Button, Tooltip } from 'antd';
 import { SettingOutlined } from '@ant-design/icons';
-
+import { Button, Layout, Menu, Tooltip } from 'antd';
+import React, { useEffect } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectStatus } from '../GlobalSlice';
-import { getAllLibs, selectLibrary } from './LibrarySlice';
-import { Route, Routes, useNavigate } from 'react-router-dom';
+import { getAllLibs, selectAllLibraries } from './LibrarySlice';
+import { TVSeasonPage } from './TVSeasonPage';
 import { TVShowLibrary } from './TVShowLibrary';
 import { TVShowPage } from './TVShowPage';
-import { TVSeasonPage } from './TVSeasonPage';
+
 
 const { SubMenu } = Menu;
 const { Header, Content, Sider } = Layout;
 
 export function LibraryHome() {
   const navigate = useNavigate();
-  const { appSecret, librarySelected } = useAppSelector(selectStatus);
+  const { appSecret } = useAppSelector(selectStatus);
   const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(getAllLibs(appSecret));
   }, [dispatch, appSecret]);
-  const { tvShowLibs } = useAppSelector(selectLibrary);
+  const { tvShowLibs } = useAppSelector(selectAllLibraries);
 
   return (
     <Layout>
@@ -38,9 +38,9 @@ export function LibraryHome() {
             >
               <SubMenu key="tvshows" title="TV Shows">
                 {
-                  Object.values(tvShowLibs).map((lib) => {
+                  tvShowLibs.map((lib) => {
                     return <Menu.Item key={lib.name}
-                      onClick={() => navigate(`/lib/${lib.name}`)}>
+                      onClick={() => navigate(`/tvshows/${lib.name}`)}>
                       {lib.name}
                     </Menu.Item>
                   })
@@ -54,9 +54,9 @@ export function LibraryHome() {
           <Content style={{ padding: '0 24px', minHeight: 280 }}>
             <Routes>
               <Route path="/" element={<div>Please select a library</div>} />
-              <Route path="/lib/:name" element={<TVShowLibrary />} />
-              <Route path="/tv/:lib_name/:storage/:show_name" element={<TVShowPage />} />
-              <Route path="/season/:lib_name/:storage/:show_name/:season_number" element={<TVSeasonPage />} />
+              <Route path="/tvshows/:name" element={<TVShowLibrary />} />
+              <Route path="/tv/:lib_name/:show_name" element={<TVShowPage />} />
+              <Route path="/season/:lib_name/:show_name/:season_number" element={<TVSeasonPage />} />
             </Routes>
           </Content>
         </Layout>

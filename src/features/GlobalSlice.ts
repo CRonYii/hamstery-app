@@ -1,17 +1,12 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import { RootState } from '../app/store';
-import { Library, LibraryType } from './Library/LibrarySlice';
 
 export interface GlobalState {
   appSecret: string,
   authorized: boolean,
   loading: boolean,
-  librarySelected?: {
-    type: LibraryType,
-    tvLib?: string
-  }
 }
 
 const initialState: GlobalState = {

@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
-
 import { Card, Col, Divider, Row, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
-import { selectLibrary, SourceType } from './LibrarySlice';
 import { getTVShowDetails } from '../TMDB';
+import { selectTVShow } from './LibrarySlice';
+
 
 const { Meta } = Card;
 
@@ -18,36 +18,32 @@ type SeasonReponse = {
 
 export function TVShowPage() {
     const navigate = useNavigate();
-    const { tvShowLibs } = useAppSelector(selectLibrary);
-    const { lib_name, storage, show_name } = useParams();
+    const { lib_name = '', show_name = '' } = useParams();
     const [seasons, setSeasons] = useState<SeasonReponse[]>([]);
+    const show = useAppSelector(selectTVShow(lib_name, show_name));
     useEffect(() => {
         async function getDetails() {
-            if (!lib_name || !storage || !show_name || !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name])
+            if (!show)
                 return;
             const data = await getTVShowDetails(show.metaSource.id, 'zh-CN');
             setSeasons(data.seasons);
         }
         getDetails();
-    }, [tvShowLibs]);
-    if (!lib_name || !storage || !show_name || !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name]) {
-        return <div />
-    }
-    const show = tvShowLibs[lib_name].storage[storage].shows[show_name];
+    }, [show]);
+
+    if (!show)
+        return <div />;
     const tvShowPoster = show.poster;
-    if (show.metaSource.type !== SourceType.TMDB) {
-        return <div>Unsupported</div>
-    }
     return <div>
         <Typography.Title>{show_name}</Typography.Title>
         <Divider />
-        <Row gutter={24} style={{margin: 16}} align='bottom'>
+        <Row gutter={24} style={{ margin: 16 }} align='bottom'>
             {
                 seasons.map((s) => {
                     return <Col key={s.season_number}>
                         <Card
                             hoverable
-                            onClick={() => navigate(`/season/${lib_name}/${encodeURIComponent(show.storage)}/${show.name}/${s.season_number}`)}
+                            onClick={() => navigate(`/season/${lib_name}/${show.name}/${s.season_number}`)}
                             style={{ width: 300 }}
                             cover={< img alt="Poster" src={s.poster_path ? `https://image.tmdb.org/t/p/w500/${s.poster_path}` : tvShowPoster} />}
                         >

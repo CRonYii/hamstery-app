@@ -1,11 +1,11 @@
-import React, { ReactNode, useEffect, useState } from 'react';
-
-import { Card, Col, Divider, Row, Typography } from 'antd';
 import { CheckCircleTwoTone, CloudDownloadOutlined, ImportOutlined } from '@ant-design/icons';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Card, Col, Divider, Row, Typography } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
-import { selectLibrary, SourceType } from './LibrarySlice';
-import { getTVShowDetails, getTVShowSeason } from '../TMDB';
+import { getTVShowSeason } from '../TMDB';
+import { selectTVShow, selectTVShowSeason } from './LibrarySlice';
+
 
 const { Meta } = Card;
 
@@ -18,32 +18,23 @@ type EpisodeReponse = {
 };
 
 export function TVSeasonPage() {
-    const { tvShowLibs } = useAppSelector(selectLibrary);
-    const { lib_name, storage, show_name, season_number } = useParams();
     const [seasonName, setSeasonName] = useState('');
     const [episodes, setEpisodes] = useState<EpisodeReponse[]>([]);
+    const { lib_name = '', show_name = '', season_number = '' } = useParams();
+    const show = useAppSelector(selectTVShow(lib_name, show_name));
+    const season = useAppSelector(selectTVShowSeason(lib_name, show_name, Number(season_number)));
     useEffect(() => {
         async function getDetails() {
-            if (!lib_name || !storage || !show_name || !season_number ||
-                !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name] ||
-                !tvShowLibs[lib_name].storage[storage].shows[show_name].seasons[season_number])
+            if (!show || !season)
                 return;
             const data = await getTVShowSeason(show.metaSource.id, Number(season_number), 'zh-CN');
             setSeasonName(data.name);
             setEpisodes(data.episodes.filter((e: any) => new Date(e.air_date) < new Date()));
         }
         getDetails();
-    }, [tvShowLibs]);
-    if (!lib_name || !storage || !show_name || !season_number ||
-        !tvShowLibs[lib_name] || !tvShowLibs[lib_name].storage[storage] || !tvShowLibs[lib_name].storage[storage].shows[show_name] ||
-        !tvShowLibs[lib_name].storage[storage].shows[show_name].seasons[season_number]) {
+    }, [show, season, season_number]);
+    if (!show || !season)
         return <div />
-    }
-    const show = tvShowLibs[lib_name].storage[storage].shows[show_name];
-    const season = show.seasons[season_number];
-    if (show.metaSource.type !== SourceType.TMDB) {
-        return <div>Unsupported</div>
-    }
     const tvShowPoster = show.poster;
     return <div>
         <Typography.Title>{show_name} {seasonName}</Typography.Title>
@@ -52,10 +43,10 @@ export function TVSeasonPage() {
             {
                 episodes.map((e) => {
                     const localFile = season.episodes[e.episode_number - 1];
-                    const actions= [];
+                    const actions = [];
                     if (localFile)
                         actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
-                        else {
+                    else {
                         actions.push(<CloudDownloadOutlined />);
                         actions.push(<ImportOutlined />);
                     }

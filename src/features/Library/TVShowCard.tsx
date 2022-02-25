@@ -1,16 +1,16 @@
 import React from 'react';
 
 import { Card } from 'antd';
-import { Show } from './LibrarySlice';
 import { useNavigate } from 'react-router-dom';
+import { ITVShow } from './LibrarySlice'
 
 const { Meta } = Card;
 
-export function TVShowCard({ libName, show }: { libName: string, show: Show }) {
+export function TVShowCard({ libName, show }: { libName: string, show: ITVShow }) {
     const navigate = useNavigate();
     return <Card
         hoverable
-        onClick={() => navigate(`/tv/${libName}/${encodeURIComponent(show.storage)}/${show.name}`)}
+        onClick={() => navigate(`/tv/${libName}/${show.name}`)}
         style={{ width: 185 }}
         cover={< img alt="Poster" src={show.poster} />}
     >

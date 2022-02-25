@@ -1,60 +1,46 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { hamsteryGetAllLibs } from '../HamsteryAPI';
-
-export enum LibraryType {
-  Show,
-  Movie
-};
-
-export type Library = {
-  name: string,
-  type: LibraryType,
-  storage: StorageMap,
-};
-
-interface StorageMap { [key: string]: LibraryStorage; };
-
-export type LibraryStorage = {
-  directory: string,
-  shows: ShowMap
-};
-
-interface ShowMap { [key: string]: Show; };
-
-export type Show = {
-  name: string,
-  storage: string,
-  poster?: string,
-  localPath: string,
-  metaSource: MetaSource,
-  seasons: SeasonMap
-};
-
 export enum SourceType {
-  TMDB
+  TMDB = "TMDB"
 };
 
-export type MetaSource = {
+/* Typescript types definition */
+export interface ISeason {
+  seasonNumber: number,
+  episodes: string[]
+};
+
+export interface IMetaSource {
   type: SourceType,
   id: string
 };
 
-interface SeasonMap { [key: string]: Season; };
-
-export type Season = {
-  seasonNumber: number,
-  episodes: Array<null | string>
+export interface ITVShow {
+  localPath: string,
+  name: string,
+  yearReleased: number,
+  metaSource: IMetaSource,
+  poster?: string,
+  seasons: ISeason[]
 };
 
-interface LibraryMap { [key: string]: Library; };
+export interface IStorage {
+  directory: string,
+};
+
+export interface ITVShowsLibrary {
+  name: string,
+  storage: IStorage[],
+  shows: ITVShow[],
+};
 
 export interface TVShowLibraryState {
-  tvShowLibs: LibraryMap
+  tvShowLibs: ITVShowsLibrary[]
 }
 
 const initialState: TVShowLibraryState = {
-  tvShowLibs: {}
+  tvShowLibs: []
 };
 
 export const getAllLibs = createAsyncThunk(
@@ -74,17 +60,23 @@ export const tvShowLibrarySlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getAllLibs.fulfilled, (state, action) => {
-        const map: any = {};
-        action.payload
-          .filter((l: any) => l.type === LibraryType.Show)
-          .forEach((l: any) => {
-            map[l.name] = l;
-          });
-        state.tvShowLibs = map;
+        state.tvShowLibs = action.payload;
       });
   }
 });
 
-export const selectLibrary = (state: RootState) => state.libs;
+export const selectAllLibraries = (state: RootState) => state.libs;
+export const selectTVShowsLibrary = (lib_name: string) => (state: RootState) => {
+  return state.libs.tvShowLibs.find(l => l.name === lib_name);
+};
+export const selectTVShow = (lib_name: string, tv_show: string) => (state: RootState) => {
+  return state.libs.tvShowLibs.find(l => l.name === lib_name)
+  ?.shows.find(s => s.name === tv_show);
+};
+export const selectTVShowSeason = (lib_name: string, tv_show: string, season_number: number) => (state: RootState) => {
+  return state.libs.tvShowLibs.find(l => l.name === lib_name)
+    ?.shows.find(s => s.name === tv_show)
+    ?.seasons.find(s => s.seasonNumber === season_number);
+};
 
 export default tvShowLibrarySlice.reducer;
