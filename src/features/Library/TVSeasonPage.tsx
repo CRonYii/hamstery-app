@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectStatus } from '../GlobalSlice';
 import { hamsteryAddEpisodeToShow, hamsterySearchResources } from '../HamsteryAPI';
 import { getTVShowSeason } from '../TMDB';
-import { addEpisodeToShow, selectTVShow, selectTVShowSeason } from './LibrarySlice';
+import { addEpisodeToShow, EpisodeStatus, selectTVShow, selectTVShowSeason } from './LibrarySlice';
 import { PathSelector } from './PathSelector';
 
 const { Meta } = Card;
@@ -158,9 +158,9 @@ export function TVSeasonPage() {
         <Row gutter={24} style={{ margin: 16 }} align='bottom'>
             {
                 episodes.map((e) => {
-                    const localFile = season.episodes[e.episode_number - 1];
+                    const { status } = season.episodes[e.episode_number - 1];
                     const actions = [];
-                    if (localFile)
+                    if (status !== EpisodeStatus.MISSING)
                         actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
                     else {
                         actions.push(<CloudDownloadOutlined onClick={() => setDownloadModal({ ...downloadModal, visible: true })} />);

@@ -2,14 +2,26 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { hamsteryGetAllLibs, hamsteryGetShow } from '../HamsteryAPI';
 
+export enum EpisodeStatus {
+  DOWNLOAED = 'downloaded',
+  DOWNLOADING = 'downloading',
+  MISSING = 'missing',
+};
+
 export enum SourceType {
   TMDB = "TMDB"
 };
 
 /* Typescript types definition */
+interface IEpisode {
+  status: EpisodeStatus
+  episodeNumber: number,
+  path: string,
+}
+
 export interface ISeason {
   seasonNumber: number,
-  episodes: string[]
+  episodes: IEpisode[]
 };
 
 export interface IMetaSource {
@@ -77,7 +89,7 @@ export const tvShowLibrarySlice = createSlice({
         ?.seasons.find(s => s.seasonNumber === season_number);
       if (!season?.episodes || season.episodes.length < ep_number)
         return;
-      season.episodes[ep_number - 1] = filename;
+      season.episodes[ep_number - 1] = { path: filename, episodeNumber: ep_number, status: EpisodeStatus.DOWNLOAED };
     }
   },
   extraReducers: (builder) => {
