@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 import { hamsteryGetAllLibs, hamsteryGetShow } from '../HamsteryAPI';
 
@@ -69,7 +69,17 @@ export const tvShowLibrarySlice = createSlice({
   name: 'Library',
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
-  reducers: {},
+  reducers: {
+    addEpisodeToShow(state, action: PayloadAction<{ filename: string, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
+      const { filename, lib_name, tv_show, season_number, ep_number } = action.payload;
+      const season = state.tvShowLibs.find(l => l.name === lib_name)
+        ?.shows.find(s => s.name === tv_show)
+        ?.seasons.find(s => s.seasonNumber === season_number);
+      if (!season?.episodes || season.episodes.length < ep_number)
+        return;
+      season.episodes[ep_number - 1] = filename;
+    }
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getAllLibs.fulfilled, (state, action) => {
@@ -95,5 +105,7 @@ export const selectTVShowSeason = (lib_name: string, tv_show: string, season_num
     ?.shows.find(s => s.name === tv_show)
     ?.seasons.find(s => s.seasonNumber === season_number);
 };
+
+export const { addEpisodeToShow } = tvShowLibrarySlice.actions;
 
 export default tvShowLibrarySlice.reducer;

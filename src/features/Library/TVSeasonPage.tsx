@@ -1,10 +1,13 @@
 import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined } from '@ant-design/icons';
-import { Breadcrumb, Card, Col, Divider, Row } from 'antd';
+import { Breadcrumb, Button, Card, Col, Divider, Form, message, Modal, Row } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useAppSelector } from '../../app/hooks';
+import { useAppDispatch, useAppSelector } from '../../app/hooks';
+import { selectStatus } from '../GlobalSlice';
+import { hamsteryAddEpisodeToShow } from '../HamsteryAPI';
 import { getTVShowSeason } from '../TMDB';
-import { selectTVShow, selectTVShowSeason } from './LibrarySlice';
+import { addEpisodeToShow, selectTVShow, selectTVShowSeason } from './LibrarySlice';
+import { PathSelector } from './PathSelector';
 
 
 const { Meta } = Card;
@@ -19,8 +22,12 @@ type EpisodeReponse = {
 
 export function TVSeasonPage() {
     const [seasonName, setSeasonName] = useState('');
+    const [importModal, setImportModal] = useState({ visible: false, ep: 0 });
     const [episodes, setEpisodes] = useState<EpisodeReponse[]>([]);
     const { lib_name = '', show_name = '', season_number = '' } = useParams();
+    const dispatch = useAppDispatch();
+    const { appSecret } = useAppSelector(selectStatus);
+    const [form] = Form.useForm();
     const show = useAppSelector(selectTVShow(lib_name, show_name));
     const season = useAppSelector(selectTVShowSeason(lib_name, show_name, Number(season_number)));
     useEffect(() => {
@@ -37,6 +44,42 @@ export function TVSeasonPage() {
         return <div />
     const tvShowPoster = show.poster;
     return <div>
+        <Modal
+            title={`Import to ${lib_name} / ${show_name} / ${seasonName} E${importModal.ep}`}
+            visible={importModal.visible}
+            footer={[
+                <Button key='submit' form="importShow" type="primary" htmlType="submit">Submit</Button>,
+            ]}
+        >
+            <Form
+                form={form}
+                id="importShow"
+                name="importShow"
+                labelCol={{ span: 4 }}
+                onFinish={async ({ file: filename }) => {
+                    console.log(lib_name, show._id, season.seasonNumber, importModal.ep, filename);
+
+                    const hide = message.loading('Importing...', 0);
+                    try {
+                        await hamsteryAddEpisodeToShow(appSecret, filename, lib_name, show._id, season.seasonNumber, importModal.ep);
+                        dispatch(addEpisodeToShow({ filename, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: importModal.ep }));
+                        setImportModal({ visible: false, ep: 0 });
+                    } catch (e: any) {
+                        message.error(e?.response?.data?.reason || 'Something went wrong');
+                    } finally {
+                        hide();
+                    }
+                }}
+                autoComplete="off"
+            >
+                <Form.Item
+                    label="File"
+                    name="file"
+                >
+                    <PathSelector type='file' />
+                </Form.Item>
+            </Form>
+        </Modal>
         <Breadcrumb>
             <Breadcrumb.Item>
                 <Link to={`/tvshows/${lib_name}`}>
@@ -49,7 +92,7 @@ export function TVSeasonPage() {
                 </Link>
             </Breadcrumb.Item>
             <Breadcrumb.Item>
-                    {seasonName}
+                {seasonName}
             </Breadcrumb.Item>
         </Breadcrumb>
         <Divider />
@@ -62,7 +105,7 @@ export function TVSeasonPage() {
                         actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
                     else {
                         actions.push(<CloudDownloadOutlined />);
-                        actions.push(<ImportOutlined />);
+                        actions.push(<ImportOutlined onClick={() => setImportModal({ visible: true, ep: e.episode_number })} />);
                     }
                     return <Col key={e.episode_number}>
                         <Card

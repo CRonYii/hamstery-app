@@ -82,9 +82,9 @@ interface SearchResult {
 }
 
 function AddLibraryModal() {
-  const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const visible = useAppSelector(selectAddLibraryodal);
+  const dispatch = useAppDispatch();
   const { appSecret } = useAppSelector(selectStatus);
   const [form] = Form.useForm();
   const closeModal = () => dispatch(setAddLibraryModal(false));
