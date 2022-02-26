@@ -44,3 +44,8 @@ export const hamsteryList = async (appSecret: string, directory = '') => {
     const { data } = await axios.get(`/api/v1/media/list/${directory}`, { headers: { Authorization: appSecret } });
     return data;
 };
+
+export const hamsterySearchResources = async (appSecret: string, source: 'dmhy', keyword: string, limit = 1) => {
+    const { data } = await axios.get(`/api/v1/media/search/${source}/${keyword}?limit=${limit}`, { headers: { Authorization: appSecret } });
+    return data;
+};
