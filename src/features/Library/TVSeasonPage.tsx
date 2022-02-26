@@ -50,6 +50,7 @@ export function TVSeasonPage() {
             footer={[
                 <Button key='submit' form="importShow" type="primary" htmlType="submit">Submit</Button>,
             ]}
+            onCancel={() => setImportModal({ visible: false, ep: 0 })}
         >
             <Form
                 form={form}
