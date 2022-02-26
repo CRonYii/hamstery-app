@@ -23,7 +23,7 @@ export function TVShowLibrary() {
     <div>
       <Breadcrumb>
         <Breadcrumb.Item>
-          <Dropdown overlay={LibraryContextMenu(name, appSecret, dispatch, () => dispatch(setAddShowModal({ visible: true, library: lib })))} trigger={['click']}>
+          <Dropdown overlay={LibraryContextMenu(name, appSecret, dispatch, () => dispatch(setAddShowModal({ visible: true, library: lib })))} trigger={['click', 'contextMenu']}>
             <Link to={`/tvshows/${lib.name}`}>
               <HomeOutlined /> <span>{lib.name}</span>
             </Link>
