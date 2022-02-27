@@ -2,11 +2,11 @@ import { DeleteTwoTone, EditTwoTone, FolderAddTwoTone, PlusOutlined, ReloadOutli
 import { Button, Dropdown, Form, Input, Layout, Menu, message, Modal, Popconfirm, Radio, Select, Tooltip } from 'antd';
 import debounce from 'lodash/debounce';
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate, Outlet, Route, Routes, useNavigate, useNavigationType } from 'react-router-dom';
+import { Link, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectAddLibraryodal, selectAddShowModal, selectStatus, setAddLibraryModal, setAddShowModal } from '../GlobalSlice';
 import { hamsteryAddLib, hamsteryAddShowToLib, hamsteryDeleteLib, hamsteryRefreshLib } from '../HamsteryAPI';
-import { searchTVShowsAll } from '../TMDB';
+import { searchTVShowsAll, TMDB_IMAGE500_URL } from '../TMDB';
 import { addShowToLib, getAllLibs, selectAllLibraries } from './LibrarySlice';
 import { PathSelector } from './PathSelector';
 import { TVSeasonPage } from './TVSeasonPage';
@@ -78,7 +78,7 @@ function HomeLayout() {
 }
 
 interface SearchResult {
-  name: string, id: number, first_air_date: string
+  name: string, id: number, first_air_date: string, poster_path: string
 }
 
 function AddLibraryModal() {
@@ -134,17 +134,17 @@ function AddLibraryModal() {
             {fields.map((field, index) => {
               return <div key={field.key}>
                 <Form.Item label="Storage" style={{ marginBottom: 0 }}>
-                    <Form.Item
-                      name={[index]}
-                      style={{ display: 'inline-block' }}
-                      rules={[{ required: true, message: 'Storage cannot be empty!' }]}
-                    >
-                      <PathSelector  />
-                    </Form.Item>
-                    <Button
-                      danger
-                      icon={<DeleteTwoTone twoToneColor="#eb2f96" />}
-                      onClick={() => remove(field.name)} />
+                  <Form.Item
+                    name={[index]}
+                    style={{ display: 'inline-block' }}
+                    rules={[{ required: true, message: 'Storage cannot be empty!' }]}
+                  >
+                    <PathSelector />
+                  </Form.Item>
+                  <Button
+                    danger
+                    icon={<DeleteTwoTone twoToneColor="#eb2f96" />}
+                    onClick={() => remove(field.name)} />
                 </Form.Item>
               </div>
             })}
@@ -161,6 +161,7 @@ function AddShowModal() {
   const { visible, library } = useAppSelector(selectAddShowModal);
   const { appSecret } = useAppSelector(selectStatus);
   const [keyword, setKeyword] = useState('');
+  const [poster, setPoster] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [form] = Form.useForm();
 
@@ -169,7 +170,9 @@ function AddShowModal() {
     if (keyword.trim() === '')
       return setSearchResults([]);
     const data = await searchTVShowsAll(keyword, 'zh-CN'); /* TODO: Language Option */
-    setSearchResults(data.map((show: SearchResult) => ({ name: show.name, id: show.id, first_air_date: show.first_air_date })));
+    setSearchResults(data.map((show: SearchResult) => ({
+      name: show.name, id: show.id, first_air_date: show.first_air_date, poster_path: TMDB_IMAGE500_URL + show.poster_path
+    })));
   };
 
   if (!library)
@@ -226,11 +229,13 @@ function AddShowModal() {
           notFoundContent={null}
           onSearch={debounce(handleSearch, 250)}
           onChange={keyword => setKeyword(keyword)}
+          onSelect={(value: any, option: any) => setPoster(searchResults[Number(option.key)].poster_path)}
         >
-          {searchResults.map((show) => <Select.Option key={show.id} value={show.id}>{show.name} - {show.first_air_date}</Select.Option>)}
+          {searchResults.map((show, idx) => <Select.Option key={idx} value={show.id}>{show.name} - {show.first_air_date}</Select.Option>)}
         </Select>
       </Form.Item>
     </Form>
+    <img src={poster} style={{ marginLeft: 'auto', marginRight: 'auto', display: 'block' }} />
   </Modal>
 }
 
