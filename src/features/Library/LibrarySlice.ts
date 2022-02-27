@@ -90,7 +90,16 @@ export const tvShowLibrarySlice = createSlice({
       if (!season?.episodes || season.episodes.length < ep_number)
         return;
       season.episodes[ep_number - 1] = { path: filename, episodeNumber: ep_number, status: EpisodeStatus.DOWNLOAED };
-    }
+    },
+    setEpisodeDownloading(state, action: PayloadAction<{ task_id: string, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
+      const { task_id, lib_name, tv_show, season_number, ep_number } = action.payload;
+      const season = state.tvShowLibs.find(l => l.name === lib_name)
+        ?.shows.find(s => s.name === tv_show)
+        ?.seasons.find(s => s.seasonNumber === season_number);
+      if (!season?.episodes || season.episodes.length < ep_number)
+        return;
+      season.episodes[ep_number - 1] = { path: task_id, episodeNumber: ep_number, status: EpisodeStatus.DOWNLOADING };
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -118,6 +127,6 @@ export const selectTVShowSeason = (lib_name: string, tv_show: string, season_num
     ?.seasons.find(s => s.seasonNumber === season_number);
 };
 
-export const { addEpisodeToShow } = tvShowLibrarySlice.actions;
+export const { addEpisodeToShow, setEpisodeDownloading } = tvShowLibrarySlice.actions;
 
 export default tvShowLibrarySlice.reducer;

@@ -27,7 +27,7 @@ export const hamsteryAddEpisodeToShow = async (appSecret: string, filename: stri
 
 export const hamsteryDownloadMagnetEpisodeToShow = async (appSecret: string, magnet_link: string, lib: string, show_id: string, season_number: number, episode_number: number): Promise<string> => {
     const { data } = await axios.put(`/api/v1/tvshows/${lib}/${show_id}/${season_number}/${episode_number}`, { magnet_link }, { headers: { Authorization: appSecret } });
-    return data;
+    return data.id;
 };
 
 export const hamsteryGetShow = async (appSecret: string, lib: string, show_id: string): Promise<ITVShow> => {

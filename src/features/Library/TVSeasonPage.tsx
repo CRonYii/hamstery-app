@@ -1,4 +1,4 @@
-import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined } from '@ant-design/icons';
+import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined, LoadingOutlined } from '@ant-design/icons';
 import { Breadcrumb, Button, Card, Col, Divider, Form, Input, message, Modal, Row, Select, Steps, Table } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectStatus } from '../GlobalSlice';
 import { hamsteryAddEpisodeToShow, hamsteryDownloadMagnetEpisodeToShow, hamsterySearchResources } from '../HamsteryAPI';
 import { getTVShowSeason } from '../TMDB';
-import { addEpisodeToShow, EpisodeStatus, selectTVShow, selectTVShowSeason } from './LibrarySlice';
+import { addEpisodeToShow, EpisodeStatus, selectTVShow, selectTVShowSeason, setEpisodeDownloading } from './LibrarySlice';
 import { PathSelector } from './PathSelector';
 
 const { Meta } = Card;
@@ -19,7 +19,7 @@ type EpisodeReponse = {
   episode_number: number,
 };
 
-const getEpNumber = (title: string) => (title.match(/[ 【[](\d{2})(v\d)?[ \]】]/) || [])[1] || '0';
+const getEpNumber = (title: string) => (title.match(/[ 第【[](\d{2,3})(v\d)?[ 话回\]】]/) || [])[1] || '0';
 
 export function TVSeasonPage() {
   const [seasonName, setSeasonName] = useState('');
@@ -53,8 +53,13 @@ export function TVSeasonPage() {
     if (keyword.trim() === '')
       return;
     setDownloadModal({ ...downloadModal, loading: true });
-    const results = await hamsterySearchResources(appSecret, 'dmhy', keyword, 50);
-    setDownloadModal({ ...downloadModal, loading: false, results });
+    try {
+      const results = await hamsterySearchResources(appSecret, 'dmhy', keyword, 50);
+      setDownloadModal({ ...downloadModal, loading: false, results });
+    } catch (e: any) {
+      message.error(e?.message || 'Something went wrong');
+      setDownloadModal({ ...downloadModal, loading: false });
+    }
   };
 
   const handleDownloadSubmit = async (data: { episodes: { name: string, ep: number }[] }) => {
@@ -65,8 +70,8 @@ export function TVSeasonPage() {
         return;
       const hide = message.loading(`Preparing Download ${show.name} ${seasonName} ${ep}...`, 0);
       try {
-        await hamsteryDownloadMagnetEpisodeToShow(appSecret, resource.link, lib_name, show._id, season.seasonNumber, ep);
-        //     dispatch(addEpisodeToShow({ filename, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: importModal.ep }));
+        const id = await hamsteryDownloadMagnetEpisodeToShow(appSecret, resource.link, lib_name, show._id, season.seasonNumber, ep);
+        dispatch(setEpisodeDownloading({ task_id: id, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: ep }));
       } catch (e: any) {
         message.error(e?.response?.data?.reason || 'Something went wrong');
       } finally {
@@ -121,8 +126,10 @@ export function TVSeasonPage() {
         <Form.List name="episodes"
           rules={[
             {
-              validator: async (_, eps: number[]) => {
-                if (new Set(eps).size !== eps.length)
+              validator: async (_, eps: { name: string, ep: number }[]) => {
+                if (eps.some(ep => ep.ep === undefined))
+                  return Promise.reject(new Error('You must choose an episode for each resource selected.'));
+                if (new Set(eps.map(ep => ep.ep)).size !== eps.length)
                   return Promise.reject(new Error('Cannot download multiple resouces for a single episode.'));
               }
             }
@@ -131,19 +138,21 @@ export function TVSeasonPage() {
             <div>
               {downloadModal.selectedKeys
                 .map(key => downloadModal.results.find(({ title }) => title === key))
-                .map((item: any, index) =>
-                  <Form.Item key={item.title}>
+                .map((item: any, index) => {
+                  const guessEp = Number(getEpNumber(item.title));
+                  return <Form.Item key={item.title}>
                     <Form.Item name={[index, 'name']} initialValue={item.title} hidden>
                       <Input />
                     </Form.Item>
-                    <Form.Item label={item.title} name={[index, 'ep']} initialValue={Number(getEpNumber(item.title))}>
+                    <Form.Item label={item.title} name={[index, 'ep']} initialValue={guessEp === 0 ? undefined : guessEp}>
                       <Select>
                         {season.episodes
                           .filter((e) => e.status === EpisodeStatus.MISSING && episodes[e.episodeNumber - 1])
                           .map((e) => <Select.Option key={e.episodeNumber} value={e.episodeNumber}>EP {e.episodeNumber}</Select.Option>)}
                       </Select>
                     </Form.Item>
-                  </Form.Item>)
+                  </Form.Item>
+                })
               }
               <Form.ErrorList errors={errors} />
             </div>
@@ -236,11 +245,13 @@ export function TVSeasonPage() {
         episodes.map((e) => {
           const { status } = season.episodes[e.episode_number - 1];
           const actions = [];
-          if (status !== EpisodeStatus.MISSING)
-            actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
-          else {
+          if (status === EpisodeStatus.MISSING) {
             actions.push(<CloudDownloadOutlined onClick={() => setDownloadModal({ ...downloadModal, visible: true })} />);
             actions.push(<ImportOutlined onClick={() => setImportModal({ visible: true, ep: e.episode_number })} />);
+          } else if (status === EpisodeStatus.DOWNLOADING) { /* TODO: useEffect() or manully refresh to poll status? */
+            actions.push(<LoadingOutlined />);
+          } else {
+            actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
           }
           return <Col key={e.episode_number}>
             <Card
