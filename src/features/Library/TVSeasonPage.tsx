@@ -1,10 +1,10 @@
-import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined, LoadingOutlined } from '@ant-design/icons';
-import { Breadcrumb, Button, Card, Col, Divider, Form, Input, message, Modal, Row, Select, Steps, Table } from 'antd';
+import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined, LoadingOutlined, DeleteTwoTone } from '@ant-design/icons';
+import { Breadcrumb, Button, Card, Col, Divider, Form, Input, message, Modal, Popconfirm, Progress, Row, Select, Steps, Table } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectStatus } from '../GlobalSlice';
-import { hamsteryAddEpisodeToShow, hamsteryDownloadMagnetEpisodeToShow, hamsteryDownloadStatus, hamsteryGetEpisode, hamsterySearchResources } from '../HamsteryAPI';
+import { hamsteryAddEpisodeToShow, hamsteryDownloadCancel, hamsteryDownloadMagnetEpisodeToShow, hamsteryDownloadStatus, hamsteryGetEpisode, hamsterySearchResources } from '../HamsteryAPI';
 import { formatBytes, percentage } from '../Helper';
 import { getTVShowSeason } from '../TMDB';
 import { EpisodeStatus, selectTVShow, selectTVShowSeason, setEpisode } from './LibrarySlice';
@@ -283,13 +283,17 @@ export function TVSeasonPage() {
     <Row gutter={24} style={{ margin: 16 }} align='bottom'>
       {
         episodes.map((e) => {
-          const { status, downloadSpeed = 0, completedLength = 0, totalLength = 0 } = season.episodes[e.episode_number - 1];
+          const { status, downloadSpeed = 0, completedLength = 0, totalLength = 0, path } = season.episodes[e.episode_number - 1];
           const actions = [];
           if (status === EpisodeStatus.MISSING) {
             actions.push(<CloudDownloadOutlined onClick={() => setDownloadModal({ ...downloadModal, visible: true })} />);
             actions.push(<ImportOutlined onClick={() => setImportModal({ visible: true, ep: e.episode_number })} />);
           } else if (status === EpisodeStatus.DOWNLOADING) { /* TODO: useEffect() or manully refresh to poll status? */
-            actions.push(<span><LoadingOutlined /> {percentage(completedLength, totalLength)}% {formatBytes(downloadSpeed)}/s</span>);
+            actions.push(
+              <Popconfirm title={"The download will be cancelled!"} onConfirm={() => hamsteryDownloadCancel(appSecret, path)}>
+                <DeleteTwoTone twoToneColor="#eb2f96" />
+              </Popconfirm>
+            );
           } else {
             actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
           }
@@ -301,10 +305,19 @@ export function TVSeasonPage() {
               actions={actions}
             >
               <Meta title={`EP ${e.episode_number}`} description={`${e.name} (${e.air_date})`} />
+              {status === EpisodeStatus.DOWNLOADING ?
+                <div>
+                  <Progress size='small' percent={Number(percentage(completedLength, totalLength).toFixed(2))} />
+                  <div style={{ fontSize: 'small', color: 'gray' }}>
+                    {totalLength === 0 ? 'Preparing...' : <span>{formatBytes(totalLength)} {formatBytes(downloadSpeed)}/s</span>}
+                  </div>
+                </div>
+                : null}
+
             </Card >
           </Col>;
         })
       }
     </Row>
-  </div>;
+  </div >;
 }

@@ -61,6 +61,11 @@ export const hamsterySearchResources = async (appSecret: string, source: 'dmhy',
 };
 
 export const hamsteryDownloadStatus = async (appSecret: string, taskid: string) => {
-    const { data } = await axios.get(`/api/v1/download/status/${taskid}`, { headers: { Authorization: appSecret } });
+    const { data } = await axios.get(`/api/v1/download/${taskid}`, { headers: { Authorization: appSecret } });
+    return data;
+};
+
+export const hamsteryDownloadCancel = async (appSecret: string, taskid: string) => {
+    const { data } = await axios.delete(`/api/v1/download/${taskid}`, { headers: { Authorization: appSecret } });
     return data;
 };
