@@ -20,6 +20,11 @@ export const hamsteryAddShowToLib = async (appSecret: string, lib: string, stora
     return data.id;
 };
 
+export const hamsteryGetEpisode = async (appSecret: string, lib: string, show_id: string, season_number: number, episode_number: number) => {
+    const { data } = await axios.get(`/api/v1/tvshows/${lib}/${show_id}/${season_number}/${episode_number}`, { headers: { Authorization: appSecret } });
+    return data;
+};
+
 export const hamsteryAddEpisodeToShow = async (appSecret: string, filename: string, lib: string, show_id: string, season_number: number, episode_number: number): Promise<string> => {
     const { data } = await axios.put(`/api/v1/tvshows/${lib}/${show_id}/${season_number}/${episode_number}`, { filename }, { headers: { Authorization: appSecret } });
     return data;
@@ -52,5 +57,10 @@ export const hamsteryList = async (appSecret: string, directory = '') => {
 
 export const hamsterySearchResources = async (appSecret: string, source: 'dmhy', keyword: string, limit = 1) => {
     const { data } = await axios.get(`/api/v1/media/search/${source}/${keyword}?limit=${limit}`, { headers: { Authorization: appSecret } });
+    return data;
+};
+
+export const hamsteryDownloadStatus = async (appSecret: string, taskid: string) => {
+    const { data } = await axios.get(`/api/v1/download/status/${taskid}`, { headers: { Authorization: appSecret } });
     return data;
 };

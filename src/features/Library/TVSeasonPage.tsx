@@ -4,9 +4,10 @@ import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectStatus } from '../GlobalSlice';
-import { hamsteryAddEpisodeToShow, hamsteryDownloadMagnetEpisodeToShow, hamsterySearchResources } from '../HamsteryAPI';
+import { hamsteryAddEpisodeToShow, hamsteryDownloadMagnetEpisodeToShow, hamsteryDownloadStatus, hamsteryGetEpisode, hamsterySearchResources } from '../HamsteryAPI';
+import { formatBytes, percentage } from '../Helper';
 import { getTVShowSeason } from '../TMDB';
-import { addEpisodeToShow, EpisodeStatus, selectTVShow, selectTVShowSeason, setEpisodeDownloading } from './LibrarySlice';
+import { EpisodeStatus, selectTVShow, selectTVShowSeason, setEpisode } from './LibrarySlice';
 import { PathSelector } from './PathSelector';
 
 const { Meta } = Card;
@@ -19,7 +20,7 @@ type EpisodeReponse = {
   episode_number: number,
 };
 
-const getEpNumber = (title: string) => (title.match(/[ 第【[](\d{2,3})(v\d)?[ 话回\]】]/) || [])[1] || '0';
+const getEpNumber = (title: string) => (title.match(/[ 第【[](\d{2,3})(v\d)?[ 话回集\]】]/) || [])[1] || '0';
 
 export function TVSeasonPage() {
   const [seasonName, setSeasonName] = useState('');
@@ -34,7 +35,7 @@ export function TVSeasonPage() {
   const season = useAppSelector(selectTVShowSeason(lib_name, show_name, Number(season_number)));
   useEffect(() => {
     async function getDetails() {
-      if (!show || !season)
+      if (!show?.metaSource?.id)
         return;
       const data = await getTVShowSeason(show.metaSource.id, Number(season_number), 'zh-CN');
       setSeasonName(data.name);
@@ -44,7 +45,34 @@ export function TVSeasonPage() {
       );
     }
     getDetails();
-  }, [show, season, season_number]);
+  }, [show?.metaSource?.id, season_number]);
+  useEffect(() => {
+    if (!show || !season)
+      return;
+    const timerid = setInterval(() => {
+      season.episodes.forEach(async (episode) => {
+        if (episode.status !== EpisodeStatus.DOWNLOADING)
+          return;
+        try {
+          const episodeInfo = await hamsteryDownloadStatus(appSecret, episode.path);
+          dispatch(setEpisode({
+            episode: { ...episode, ...episodeInfo },
+            lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: episode.episodeNumber
+          }));
+        } catch (e: any) {
+          if (e?.response?.status === 422) {
+            /* Task does not exist, may have already finish */
+            const episodeInfo = await hamsteryGetEpisode(appSecret, lib_name, show._id, season.seasonNumber, episode.episodeNumber);
+            dispatch(setEpisode({
+              episode: { ...episode, ...episodeInfo },
+              lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: episode.episodeNumber
+            }));
+          }
+        }
+      });
+    }, 1000);
+    return () => clearInterval(timerid);
+  }, [dispatch, appSecret, lib_name, show, season]);
   if (!show || !season)
     return <div />
   const tvShowPoster = show.poster;
@@ -71,7 +99,13 @@ export function TVSeasonPage() {
       const hide = message.loading(`Preparing Download ${show.name} ${seasonName} ${ep}...`, 0);
       try {
         const id = await hamsteryDownloadMagnetEpisodeToShow(appSecret, resource.link, lib_name, show._id, season.seasonNumber, ep);
-        dispatch(setEpisodeDownloading({ task_id: id, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: ep }));
+        dispatch(setEpisode({
+          episode: {
+            episodeNumber: ep,
+            status: EpisodeStatus.DOWNLOADING,
+            path: id,
+          }, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: ep
+        }));
       } catch (e: any) {
         message.error(e?.response?.data?.reason || 'Something went wrong');
       } finally {
@@ -201,7 +235,13 @@ export function TVSeasonPage() {
         const hide = message.loading('Importing...', 0);
         try {
           await hamsteryAddEpisodeToShow(appSecret, filename, lib_name, show._id, season.seasonNumber, importModal.ep);
-          dispatch(addEpisodeToShow({ filename, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: importModal.ep }));
+          dispatch(setEpisode({
+            episode: {
+              episodeNumber: importModal.ep,
+              status: EpisodeStatus.DOWNLOAED,
+              path: filename
+            }, lib_name, tv_show: show.name, season_number: season.seasonNumber, ep_number: importModal.ep
+          }));
           setImportModal({ visible: false, ep: 0 });
         } catch (e: any) {
           message.error(e?.response?.data?.reason || 'Something went wrong');
@@ -243,13 +283,13 @@ export function TVSeasonPage() {
     <Row gutter={24} style={{ margin: 16 }} align='bottom'>
       {
         episodes.map((e) => {
-          const { status } = season.episodes[e.episode_number - 1];
+          const { status, downloadSpeed = 0, completedLength = 0, totalLength = 0 } = season.episodes[e.episode_number - 1];
           const actions = [];
           if (status === EpisodeStatus.MISSING) {
             actions.push(<CloudDownloadOutlined onClick={() => setDownloadModal({ ...downloadModal, visible: true })} />);
             actions.push(<ImportOutlined onClick={() => setImportModal({ visible: true, ep: e.episode_number })} />);
           } else if (status === EpisodeStatus.DOWNLOADING) { /* TODO: useEffect() or manully refresh to poll status? */
-            actions.push(<LoadingOutlined />);
+            actions.push(<span><LoadingOutlined /> {percentage(completedLength, totalLength)}% {formatBytes(downloadSpeed)}/s</span>);
           } else {
             actions.push(<CheckCircleTwoTone twoToneColor="#52c41a" />);
           }

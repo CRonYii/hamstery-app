@@ -17,6 +17,9 @@ interface IEpisode {
   status: EpisodeStatus
   episodeNumber: number,
   path: string,
+  totalLength?: number
+  completedLength?: number
+  downloadSpeed?: number
 }
 
 export interface ISeason {
@@ -82,14 +85,14 @@ export const tvShowLibrarySlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
-    addEpisodeToShow(state, action: PayloadAction<{ filename: string, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
-      const { filename, lib_name, tv_show, season_number, ep_number } = action.payload;
+    setEpisode(state, action: PayloadAction<{ episode: IEpisode, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
+      const { episode, lib_name, tv_show, season_number, ep_number } = action.payload;
       const season = state.tvShowLibs.find(l => l.name === lib_name)
         ?.shows.find(s => s.name === tv_show)
         ?.seasons.find(s => s.seasonNumber === season_number);
       if (!season?.episodes || season.episodes.length < ep_number)
         return;
-      season.episodes[ep_number - 1] = { path: filename, episodeNumber: ep_number, status: EpisodeStatus.DOWNLOAED };
+      season.episodes[ep_number - 1] = { ...episode };
     },
     setEpisodeDownloading(state, action: PayloadAction<{ task_id: string, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
       const { task_id, lib_name, tv_show, season_number, ep_number } = action.payload;
@@ -127,6 +130,6 @@ export const selectTVShowSeason = (lib_name: string, tv_show: string, season_num
     ?.seasons.find(s => s.seasonNumber === season_number);
 };
 
-export const { addEpisodeToShow, setEpisodeDownloading } = tvShowLibrarySlice.actions;
+export const { setEpisode } = tvShowLibrarySlice.actions;
 
 export default tvShowLibrarySlice.reducer;
