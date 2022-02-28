@@ -6,6 +6,11 @@ export const hamsteryGetAllLibs = async (appSecret: string) => {
     return data;
 };
 
+export const hamsteryGetLibByName = async (appSecret: string, lib: string) => {
+    const { data } = await axios.get(`/api/v1/tvshows/${lib}`, { headers: { Authorization: appSecret } });
+    return data;
+};
+
 export const hamsteryRefreshLib = async (appSecret: string, lib: string) => {
     const { data } = await axios.put(`/api/v1/tvshows/${lib}`,
         {
@@ -41,7 +46,7 @@ export const hamsteryGetShow = async (appSecret: string, lib: string, show_id: s
 };
 
 export const hamsteryAddLib = async (appSecret: string, lib: { name: string, storage: string[] }) => {
-    const { data } = await axios.post(`/api/v1/tvshows`, { ...lib }, { headers: { Authorization: appSecret } });
+    const { data } = await axios.post(`/api/v1/tvshows`, { name: lib.name, storage: lib.storage || [] }, { headers: { Authorization: appSecret } });
     return data;
 };
 

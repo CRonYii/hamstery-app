@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { selectAddLibraryodal, selectAddShowModal, selectStatus, setAddLibraryModal, setAddShowModal } from '../GlobalSlice';
 import { hamsteryAddLib, hamsteryAddShowToLib, hamsteryDeleteLib, hamsteryRefreshLib } from '../HamsteryAPI';
 import { searchTVShowsAll, TMDB_IMAGE500_URL } from '../TMDB';
-import { addShowToLib, getAllLibs, selectAllLibraries } from './LibrarySlice';
+import { addShowToLib, getAllLibs, getLibByName, removeLib, selectAllLibraries } from './LibrarySlice';
 import { PathSelector } from './PathSelector';
 import { TVSeasonPage } from './TVSeasonPage';
 import { TVShowLibrary } from './TVShowLibrary';
@@ -101,12 +101,17 @@ function AddLibraryModal() {
       initialValues={{ type: 'tvshows' }}
       onFinish={async (data) => {
         const hide = message.loading('Adding library...', 0);
-        await hamsteryAddLib(appSecret, data);
-        hide();
-        dispatch(getAllLibs(appSecret));
-        navigate(`/tvshows/${data.name}`);
-        form.resetFields();
-        closeModal();
+        try {
+          await hamsteryAddLib(appSecret, data);
+          dispatch(getLibByName({ appSecret, name: data.name }));
+          navigate(`/tvshows/${data.name}`);
+          form.resetFields();
+          closeModal();
+        } catch (e: any) {
+          message.error(e?.message || 'Something went wrong');
+        } finally {
+          hide();
+        }
       }}
       autoComplete="off"
     >
@@ -247,15 +252,20 @@ export function LibraryContextMenu(name: string, appSecret: string, dispatch: an
     <Menu.Item key='refresh' icon={<ReloadOutlined />} onClick={
       async () => {
         const hide = message.loading('Rescan in progress...', 0);
-        await hamsteryRefreshLib(appSecret, name)
-        hide();
-        dispatch(getAllLibs(appSecret));
+        try {
+          await hamsteryRefreshLib(appSecret, name)
+          dispatch(getLibByName({ appSecret, name }));
+        } catch (e: any) {
+          message.error(e?.message || 'Something went wrong');
+        } finally {
+          hide();
+        }
       }
     }>Rescan Library</Menu.Item>
     <Popconfirm title={`The library "${name}" will be removed. This can't be undone. Continue?`}
       onConfirm={async () => {
         await hamsteryDeleteLib(appSecret, name)
-        dispatch(getAllLibs(appSecret));
+        dispatch(removeLib(name));
       }}>
       <Menu.Item key='delete' icon={<DeleteTwoTone twoToneColor="#eb2f96" />}>Delete</Menu.Item>
     </Popconfirm>

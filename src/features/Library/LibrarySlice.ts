@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
-import { hamsteryGetAllLibs, hamsteryGetShow } from '../HamsteryAPI';
+import { hamsteryGetAllLibs, hamsteryGetLibByName, hamsteryGetShow } from '../HamsteryAPI';
 
 export enum EpisodeStatus {
   DOWNLOAED = 'downloaded',
@@ -70,6 +70,15 @@ export const getAllLibs = createAsyncThunk(
   }
 );
 
+export const getLibByName = createAsyncThunk(
+  'library/getLibByName',
+  async (params: { appSecret: string, name: string }) => {
+    const data = await hamsteryGetLibByName(params.appSecret, params.name);
+    // The value we return becomes the `fulfilled` action payload
+    return { name: params.name, lib: data };
+  }
+);
+
 export const addShowToLib = createAsyncThunk(
   'library/addShowToLib',
   async (params: { appSecret: string, lib: string, show_id: string }) => {
@@ -85,6 +94,9 @@ export const tvShowLibrarySlice = createSlice({
   initialState,
   // The `reducers` field lets us define reducers and generate associated actions
   reducers: {
+    removeLib(state, action: PayloadAction<string>) {
+      state.tvShowLibs.splice(state.tvShowLibs.findIndex(l => l.name === action.payload), 1);
+    },
     setEpisode(state, action: PayloadAction<{ episode: IEpisode, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
       const { episode, lib_name, tv_show, season_number, ep_number } = action.payload;
       const season = state.tvShowLibs.find(l => l.name === lib_name)
@@ -93,21 +105,20 @@ export const tvShowLibrarySlice = createSlice({
       if (!season?.episodes || season.episodes.length < ep_number)
         return;
       season.episodes[ep_number - 1] = { ...episode };
-    },
-    setEpisodeDownloading(state, action: PayloadAction<{ task_id: string, lib_name: string, tv_show: string, season_number: number, ep_number: number }>) {
-      const { task_id, lib_name, tv_show, season_number, ep_number } = action.payload;
-      const season = state.tvShowLibs.find(l => l.name === lib_name)
-        ?.shows.find(s => s.name === tv_show)
-        ?.seasons.find(s => s.seasonNumber === season_number);
-      if (!season?.episodes || season.episodes.length < ep_number)
-        return;
-      season.episodes[ep_number - 1] = { path: task_id, episodeNumber: ep_number, status: EpisodeStatus.DOWNLOADING };
-    },
+    }
   },
   extraReducers: (builder) => {
     builder
       .addCase(getAllLibs.fulfilled, (state, action) => {
         state.tvShowLibs = action.payload;
+      })
+      .addCase(getLibByName.fulfilled, (state, action) => {
+        const i = state.tvShowLibs.findIndex((l) => l.name === action.payload.name);
+        if (i !== -1) {
+          state.tvShowLibs[i] = action.payload.lib;
+        } else {
+          state.tvShowLibs.push(action.payload.lib);
+        }
       })
       .addCase(addShowToLib.fulfilled, (state, action) => {
         state.tvShowLibs.find((l) => l.name === action.payload.lib)
@@ -130,6 +141,6 @@ export const selectTVShowSeason = (lib_name: string, tv_show: string, season_num
     ?.seasons.find(s => s.seasonNumber === season_number);
 };
 
-export const { setEpisode } = tvShowLibrarySlice.actions;
+export const { setEpisode, removeLib } = tvShowLibrarySlice.actions;
 
 export default tvShowLibrarySlice.reducer;

@@ -1,4 +1,4 @@
-import { CheckCircleTwoTone, CloudDownloadOutlined, HomeOutlined, ImportOutlined, LoadingOutlined, DeleteTwoTone } from '@ant-design/icons';
+import { CheckCircleTwoTone, CloudDownloadOutlined, DeleteTwoTone, HomeOutlined, ImportOutlined } from '@ant-design/icons';
 import { Breadcrumb, Button, Card, Col, Divider, Form, Input, message, Modal, Popconfirm, Progress, Row, Select, Steps, Table } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
