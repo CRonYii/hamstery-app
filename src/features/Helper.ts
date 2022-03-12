@@ -15,3 +15,6 @@ export function percentage(a: number, b: number) {
         return 0;
     return (a / b * 100);
 }
+
+const videoRegex = new RegExp('(.mp4|.mkv|.flv|.avi|.rmvb|.m4p|.m4v)$');
+export const isVideoFile = (f: string) => f.match(videoRegex) != null;

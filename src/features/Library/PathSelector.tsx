@@ -58,8 +58,9 @@ export function PathSelector(props: any) {
     }
 
     return <Cascader
+        placeholder='Select'
         changeOnSelect={type === 'path'}
-        style={{ minWidth: 200 }}
+        style={{ minWidth: 200, width: '100%' }}
         displayRender={(label) => label[label.length - 1]}
         onChange={onCascaderChange} loadData={loadData}
         options={options}
