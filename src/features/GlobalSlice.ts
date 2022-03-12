@@ -31,7 +31,7 @@ const hamsteryTestAppSecret = async (appSecret: string) => {
     Cookies.set('appSecret', appSecret);
     return data.result;
   } catch (e) {
-    Cookies.set('appSecret', '');
+    Cookies.set('appSecret', '', { expires: 365 });
     return 'Unauthorized'
   }
 };
