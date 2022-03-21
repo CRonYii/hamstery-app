@@ -56,7 +56,7 @@ export const hamsteryDeleteLib = async (appSecret: string, lib: string) => {
 };
 
 export const hamsteryList = async (appSecret: string, directory = '') => {
-    const { data } = await axios.get(`/api/v1/media/list/${directory}`, { headers: { Authorization: appSecret } });
+    const { data } = await axios.get(`/api/v1/media/list/${encodeURIComponent(directory)}`, { headers: { Authorization: appSecret } });
     return data;
 };
 
