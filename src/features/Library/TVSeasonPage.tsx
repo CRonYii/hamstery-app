@@ -20,7 +20,7 @@ type EpisodeReponse = {
   episode_number: number,
 };
 
-const getEpNumber = (title: string) => (title.match(/[ E第【[](\d{2,3})(v\d)?[ 话回集\].】]/) || [])[1] || '0';
+const getEpNumber = (title: string) => (title.match(/Ep|EP|[ E第【[](\d{2,3})(v\d)?[ 话回集\].】]/) || [])[1] || '0';
 
 export function TVSeasonPage() {
   const [seasonName, setSeasonName] = useState('');
