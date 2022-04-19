@@ -36,6 +36,7 @@ export interface ITVShow {
   _id: string,
   localPath: string,
   name: string,
+  firstAirDate: string,
   yearReleased: number,
   metaSource: IMetaSource,
   poster?: string,

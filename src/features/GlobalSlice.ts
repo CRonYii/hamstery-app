@@ -28,10 +28,10 @@ const initialState: GlobalState = {
 const hamsteryTestAppSecret = async (appSecret: string) => {
   try {
     const { data } = await axios.post('/api/v1/', {}, { headers: { Authorization: appSecret } });
-    Cookies.set('appSecret', appSecret);
+    Cookies.set('appSecret', appSecret, { expires: 365 });
     return data.result;
   } catch (e) {
-    Cookies.set('appSecret', '', { expires: 365 });
+    Cookies.set('appSecret', '');
     return 'Unauthorized'
   }
 };
